@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4114648202925280414
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5898991104667693529}
+  - component: {fileID: 2760607044924323408}
+  m_Layer: 0
+  m_Name: StageMaker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5898991104667693529
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4114648202925280414}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2760607044924323408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4114648202925280414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52aceffdd679c5942ac5cc8871f2aae2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StageNumber: 1
+  groundstile:
+  - {fileID: 0}
+  - {fileID: 11400000, guid: ca9fe4a85d135b24fa959545c6e62228, type: 2}
+  - {fileID: 11400000, guid: 5a90c787a9f4414408108e846581c8f8, type: 2}
+  - {fileID: 11400000, guid: bb3c380401ee28b468a9f862c946047a, type: 2}
+  - {fileID: 11400000, guid: 2020300edb72aba409e77098931fa1cf, type: 2}
+  - {fileID: 11400000, guid: 9e8d9e3a93bf22844a10d58828f0a99d, type: 2}
+  - {fileID: 11400000, guid: 82324c4dac94fa24d950fdec8c17ce7d, type: 2}
+  - {fileID: 11400000, guid: e888c75109067a748bda0340cd493080, type: 2}
+  - {fileID: 11400000, guid: b0e0120877b36cb4c998933c24a29754, type: 2}
+  - {fileID: 11400000, guid: d2884981777540447ad50e22a34c1af6, type: 2}
+  tilePos: {fileID: 0}
+  mapchip:
+  - {fileID: 1972217121246351451, guid: 2eba79c6d7c69f34c857193b9a7b2747, type: 3}
+  - {fileID: 0}
+  - {fileID: 5178163902932502434, guid: b30fd27b8085cb84b91488ff5b2f8f29, type: 3}
+  - {fileID: 0}
+  - {fileID: 8755860938142257821, guid: b8e776ff04b59b242ae73ec7c685b7d7, type: 3}
+  - {fileID: 8755860938142257821, guid: 592f2ddef1377de40ba99b0904be9dc5, type: 3}
