@@ -1,62 +1,66 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 
 public class ShrimpDush : MonoBehaviour
 {
-    /// <summary>
-    /// ƒvƒŒƒCƒ„[‚ÌFæ“¾—p
-    /// </summary>
-    private GameObject Playercolor;
-
     [SerializeField]
-    [Tooltip("ƒGƒrƒ_ƒbƒVƒ…‘¬“x")]
+    [Tooltip("ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½x")]
     private float dushSpeed;
 
     [SerializeField]
-    [Tooltip("ƒGƒrƒ_ƒbƒVƒ…ŠÔ")]
+    [Tooltip("ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     private float dushTime;
 
     /// <summary>
-    /// ƒGƒrƒ_ƒbƒVƒ…ŠÔŒv‘ª—p
+    /// ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ÔŒvï¿½ï¿½ï¿½p
     /// </summary>
     private float nowdushTime;
 
     [SerializeField]
-    [Tooltip("ƒGƒrƒ_ƒbƒVƒ…’†")]
+    [Tooltip("ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½")]
     private bool isDush;
 
     [SerializeField]
-    [Tooltip("Å‘åƒGƒrƒ_ƒbƒVƒ…‰ñ”")]
+    [Tooltip("ï¿½Å‘ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½")]
     private int maxDush;
 
     /// <summary>
-    /// ƒGƒrƒ_ƒbƒVƒ…c”
+    /// ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½cï¿½ï¿½
     /// </summary>
     private int nowDush;
 
     [SerializeField]
-    [Tooltip("ƒGƒrƒ_ƒbƒVƒ…‰ñ•œŠÔ")]
+    [Tooltip("ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½ñ•œï¿½ï¿½ï¿½")]
     private float time;
 
     private float nowtime;
 
-    private Renderer playerColor;
+    [SerializeField]
+    LayerMask mask;
 
+    private PlayerManager _cPlayerManager;
+
+    [SerializeField,Tooltip("ï¿½yï¿½ï¿½")]
+    private PlayerDustC _prfbPlayerDust;
 
     // Start is called before the first frame update
     void Start()
     {
         isDush = false;
+        _cPlayerManager = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        //RBƒL[‚ª‰Ÿ‚³‚ê‚½‚çƒGƒrƒ_ƒbƒVƒ…
-        if (Input.GetKeyDown("joystick button 5") && nowDush > 0)
+        //RBï¿½Lï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‚½ï¿½ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½
+        if (Input.GetKeyDown("joystick button 5") && nowDush > 0&&!PlayerManager.IsPlayerMoveRock)
         {
+            Instantiate(_prfbPlayerDust, transform.position+(transform.up*1.0f), transform.rotation).Hanten(_cPlayerManager.Right());
+
+            Debug.Log("ï¿½Gï¿½rï¿½_ï¿½bï¿½Vï¿½ï¿½");
+
             --nowDush;
 
             isDush = true;
@@ -92,6 +96,21 @@ public class ShrimpDush : MonoBehaviour
                 {
                     isDush = false;
                 }
+
+                if(Physics2D.Raycast(transform.position,
+                                  - transform.right,
+                                  transform.localScale.x * 0.5f + 0.1f,
+                                  mask))
+                {
+                    if (Physics2D.Raycast(transform.position,
+                                  transform.right,
+                                  transform.localScale.x * 0.5f))
+                    {
+                        transform.position += transform.right * 0.1f;
+                    }
+                    Debug.Log("ï¿½Iï¿½ï¿½");
+                    isDush = false;
+                }
             }
             else
             {
@@ -101,6 +120,21 @@ public class ShrimpDush : MonoBehaviour
 
                 if (nowdushTime >= dushTime)
                 {
+                    isDush = false;
+                }
+                if (Physics2D.Raycast(transform.position,
+                                  transform.right,
+                                  transform.localScale.x * 0.5f + 0.1f,
+                                  mask))
+                {
+                    if(Physics2D.Raycast(transform.position,
+                                  transform.right,
+                                  transform.localScale.x * 0.5f))
+                    {
+                        transform.position -= transform.right * 0.1f;
+                    }
+                    Debug.Log("ï¿½Iï¿½ï¿½");
+
                     isDush = false;
                 }
             }

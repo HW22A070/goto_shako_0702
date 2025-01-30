@@ -19,6 +19,7 @@ public class DatsuC : MonoBehaviour
     /// 3=壁突き刺さり
     /// 4=初期位置に戻る
     /// </summary>
+    [SerializeField]
     private int _datsuMode;
 
     [SerializeField]
@@ -124,6 +125,9 @@ public class DatsuC : MonoBehaviour
     /// </summary>
     private EnemyCoreC _enemyCoreScript;
 
+    [SerializeField]
+    private AudioClip _acDeath, _acDamage, _acBlocked,_acCharge, _acStinging,_acAttack;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -134,7 +138,7 @@ public class DatsuC : MonoBehaviour
 
         _datsuMode = 0;
         //初期位置登録
-        _positionOwnFirst = transform.localPosition;
+        _positionOwnFirst = transform.position;
         Debug.DrawRay(_positionOwnNow, new Vector3(0, 0, 1), Color.red, 10.0f, false);
 
         _lotationPlayerFirst=transform.localEulerAngles;
@@ -255,7 +259,7 @@ public class DatsuC : MonoBehaviour
             _spriteDatsu.flipY = true;
             //_deathMoveSpeed -= _deathMoveDeltaY;
             //ひっくり返って落ちてゆく
-            transform.position -= new Vector3(0, 0.07f, 0);
+            transform.position -= new Vector3(0, 0.4f, 0);
         }
 
         //グラフィックがさかさまにならないように調節。回転が90~270になったらY反転
@@ -288,10 +292,12 @@ public class DatsuC : MonoBehaviour
     /// <returns></returns>
     private IEnumerator AttackCharge()
     {
+        GetComponent<AudioSource>().PlayOneShot(_acCharge);
         GetComponent<GraphicC>().ResetAnimation(5);
         _spriteDatsu.flipX = true;
         yield return new WaitForSeconds(_chargeTime);
         GetComponent<GraphicC>().ResetAnimation(0);
+        GetComponent<AudioSource>().PlayOneShot(_acAttack);
         _datsuMode = 2;
     }
 
@@ -300,6 +306,7 @@ public class DatsuC : MonoBehaviour
     /// </summary>
     public void OnDeath()
     {
+        GetComponent<AudioSource>().PlayOneShot(_acDeath);
         GetComponent<GraphicC>().ResetAnimation(1);
         StopAllCoroutines();
         _datsuMode = -3;
@@ -321,6 +328,7 @@ public class DatsuC : MonoBehaviour
         }
         */
         _speedDelta = 0;
+        GetComponent<AudioSource>().PlayOneShot(_acStinging);
         yield return new WaitForSeconds(0.5f);
         //突き刺さった分戻る
         _speedDelta = _attackSpeed;
@@ -342,7 +350,7 @@ public class DatsuC : MonoBehaviour
     {
         GetComponent<GraphicC>().ResetAnimation(0);
         //初期位置と現在地から戻る方向とスピードを割り出す
-        _backSpeedDelta = (_positionOwnFirst - _positionOwnNow) / 50;
+        _backSpeedDelta = (_positionOwnFirst - transform.position) / 75;
         transform.localEulerAngles += new Vector3(0, 0, 180);
         //1.5秒かけて戻る
         yield return new WaitForSeconds(1.5f);
@@ -388,12 +396,14 @@ public class DatsuC : MonoBehaviour
     }
 
 
+
+
     /// <summary>
     /// 被ダメージ
     /// </summary>
     public void GetDamage()
     {
-
+        GetComponent<AudioSource>().PlayOneShot(_acDamage);
     }
 
     /// <summary>
@@ -430,6 +440,23 @@ public class DatsuC : MonoBehaviour
         Vector3 direction = new Vector3(
             Mathf.Sin(angle * Mathf.Deg2Rad), Mathf.Cos(angle * Mathf.Deg2Rad), 0);
         return direction;
+    }
+
+    private void OnBecameInvisible()
+    {
+        //通常時に画面の外にいたら休止
+        if (_datsuMode == 0) _datsuMode = 999;
+        if (_datsuMode == 2)
+        {
+            StartCoroutine("Stinging");
+            _datsuMode = 3;
+        }
+    }
+
+    private void OnBecameVisible()
+    {
+        //休止時に画面の中にいたら再開
+        if (_datsuMode == 999) _datsuMode = 0;
     }
 
 }

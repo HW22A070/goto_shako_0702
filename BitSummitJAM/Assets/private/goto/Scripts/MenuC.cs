@@ -13,7 +13,7 @@ public class MenuC : MonoBehaviour
 
     public static bool Pouse = false;
 
-    private int _pouse=1;
+    private int _pouse;
 
     /// <summary>
     /// 0=Ç‡Ç¡Ç©Ç¢
@@ -21,69 +21,98 @@ public class MenuC : MonoBehaviour
     /// </summary>
     private short _titleMode = 0;
 
+    private bool _isStarted;
+
     // Start is called before the first frame update
     void Start()
     {
-
+        Clear.IsClear = false;
+        Pouse = false;
         _firstPos = transform.localPosition;
         //transform.position += transform.up * 1000;
         //transform.localPosition = new Vector3(transform.localPosition.x, _firstPos.y + (_posDelta * _pouse), 0);
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Pouse) _pouse = 0;
-        else _pouse = -1;        
+        if (!Clear.IsClear)
+        {
+            if (Pouse) _pouse = 0;
+            else _pouse = -1;
 
-        if (Pouse)
-        {
-            //transform.position = _firstPos;
-            if (Input.GetKeyDown("joystick button 0"))
+            if (!_isStarted)
             {
-                Time.timeScale = 1.0f;
-                Debug.Log("start!");
-                if (_titleMode == 0) SceneManagementC.LoadScene("Stage1Scene");
-                else if (_titleMode == 1) SceneManagementC.LoadScene("TitleScene");
-                //audioSource.PlayOneShot(startS);
-            }
-            if (Input.GetKeyDown("joystick button 4"))
-            {
-                _titleMode--;
-                if (_titleMode < 0) _titleMode = 1;
-                _arrowUI.GetComponent<Arrow>().MoveArrow(_titleMode);
-                Debug.Log("è„");
-            }
-            if (Input.GetKeyDown("joystick button 5"))
-            {
-                _titleMode++;
-                if (_titleMode > 1) _titleMode = 0;
-                _arrowUI.GetComponent<Arrow>().MoveArrow(_titleMode);
-                Debug.Log("â∫");
-            }
-            if (Input.GetKeyDown("joystick button 6") || Input.GetKeyDown("joystick button 3"))
-            {
-                Time.timeScale = 1.0f;
-                transform.localPosition = new Vector3(transform.localPosition.x, _firstPos.y + (_posDelta * _pouse), 0);
-                Pouse = false;
-            }
-        }
-        else
-        {
-            //transform.position = _deletePos;
-            if (Input.GetKeyDown("joystick button 6")|| Input.GetKeyDown("joystick button 3"))
-            {
-                transform.localPosition = new Vector3(transform.localPosition.x, _firstPos.y + (_posDelta * _pouse), 0);
-                Pouse = true;
-                Time.timeScale = 0.0f;
+                if (Pouse)
+                {
+                    //transform.position = _firstPos;
+                    if (Input.GetKeyDown("joystick button 0"))
+                    {
+                        Debug.Log("start!");
+                        _isStarted = true;
+                        Time.timeScale = 1.0f;
+                        PlayerManager.IsPlayerMoveRock = false;
+
+                        if (_titleMode == 0)
+                        {
+                            SceneManagementC.PlayerDaed = false;
+                            SceneManagementC.LoadScene(SceneManagementC.NowScene);
+                        }
+                        else if (_titleMode == 1) SceneManagementC.LoadScene("TitleScene");
+                        //audioSource.PlayOneShot(startS);
+                    }
+                    if (Input.GetAxis("Horizontal") > 0.5f)
+                    {
+                        /*_titleMode--;
+                        if (_titleMode < 0) */
+                        _titleMode = 1;
+                        _arrowUI.GetComponent<Arrow>().MoveArrow(_titleMode);
+                        Debug.Log("è„");
+                    }
+                    if (Input.GetAxis("Horizontal") < -0.5f)
+                    {
+                        /*_titleMode++;
+                        if (_titleMode > 1) */
+                        _titleMode = 0;
+                        _arrowUI.GetComponent<Arrow>().MoveArrow(_titleMode);
+                        Debug.Log("â∫");
+                    }
+                    if (Input.GetKeyDown("joystick button 6") || Input.GetKeyDown("joystick button 7"))
+                    {
+                        Time.timeScale = 1.0f;
+                        transform.localPosition = new Vector3(transform.localPosition.x, _firstPos.y + (_posDelta * _pouse), 0);
+                        PlayerManager.IsPlayerMoveRock = false;
+                        Pouse = false;
+                    }
+                }
+                else
+                {
+                    //transform.position = _deletePos;
+                    if (Input.GetKeyDown("joystick button 6") || Input.GetKeyDown("joystick button 7"))
+                    {
+                        transform.localPosition = new Vector3(transform.localPosition.x, _firstPos.y + (_posDelta * _pouse), 0);
+                        Pouse = true;
+                        PlayerManager.IsPlayerMoveRock = true;
+                        Time.timeScale = 0.0f;
+                    }
+                }
             }
         }
     }
 
     private IEnumerator Load()
     {
-        yield return new WaitForSeconds(1.0f);
-        if (_titleMode == 0) SceneManagementC.LoadScene("Stage1Scene");
+        SceneManagementC.SaveNowSceneNameToNowScene();
+        yield return new WaitForSeconds(0.9f);
+
+        yield return new WaitForSeconds(0.1f);
+        Time.timeScale = 1.0f;
+        if (_titleMode == 0)
+        {
+            SceneManagementC.PlayerDaed = false;
+            SceneManagementC.LoadScene(SceneManagementC.NowScene);
+        }
         else if (_titleMode == 1) SceneManagementC.LoadScene("TitleScene");
     }
 

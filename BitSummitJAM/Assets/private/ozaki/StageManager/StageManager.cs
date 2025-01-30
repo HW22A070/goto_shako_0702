@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
-using static UnityEditor.PlayerSettings;
+//using static UnityEditor.PlayerSettings;
 
 public class StageManager : SingletonMonoBehaviour<StageManager>
 {
@@ -98,14 +98,19 @@ public class StageManager : SingletonMonoBehaviour<StageManager>
         switch(StageNumber)
         {
             case 1:
-                var data = JsonReader.LoadStage("stage01");
+                var data1 = JsonReader.LoadStage("stage01");
 
-                StageGenerator(data);
+                StageGenerator(data1);
                 break;
             case 2:
                 var data2 = JsonReader.LoadStage("stage02");
 
                 StageGenerator(data2);
+                break;
+            case 3:
+                var data3 = JsonReader.LoadStage("stage03");
+
+                StageGenerator(data3);
                 break;
         }
         

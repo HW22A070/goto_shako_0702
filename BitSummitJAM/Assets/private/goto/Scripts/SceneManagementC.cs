@@ -5,20 +5,39 @@ using UnityEngine.SceneManagement;
 
 public class SceneManagementC : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    /// <summary>
+    /// プレイ中のゲームシーン
+    /// </summary>
+    public static string NowScene;
 
-    // Update is called once per frame
-    void Update()
+    /// <summary>
+    /// プレイヤーが死んだ場所
+    /// </summary>
+    public static Vector3 PositionPlayerDead;
+
+    /// <summary>
+    /// クリアまでにゲームオーバーを経験しているか
+    /// </summary>
+    public static bool PlayerDaed;
+
+    /// <summary>
+    /// プレイ中のゲームシーンの名前をstring型でNowSceneに保存
+    /// </summary>
+    public static void SaveNowSceneNameToNowScene()
     {
+        NowScene=SceneManager.GetActiveScene().name;
         
     }
 
     public static void LoadScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);
+    }
+
+    public static void ReloadScene()
+    {
+        Debug.Log(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
     }
 }

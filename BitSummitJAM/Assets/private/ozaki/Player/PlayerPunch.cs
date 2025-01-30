@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Unity.VisualScripting;
-using UnityEditor.ShortcutManagement;
+//using UnityEditor.ShortcutManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class PlayerPunch : MonoBehaviour
 {
@@ -41,7 +43,7 @@ public class PlayerPunch : MonoBehaviour
     /// <summary>
     /// パンチ角度
     /// </summary>
-    private float punchDegree;
+    public float punchDegree;
 
     /// <summary>
     /// パンチチャージ時間
@@ -95,8 +97,6 @@ public class PlayerPunch : MonoBehaviour
     [Tooltip("ジャンプ角度")]
     private Vector3 jumpRotate;
 
-    private Renderer playerColor;
-
     /// <summary>
     /// パンチジャンプ取得
     /// </summary>
@@ -107,14 +107,41 @@ public class PlayerPunch : MonoBehaviour
     /// </summary>
     private RaycastHit2D punchRayHit;
 
+    private PlayerManager playerManager;
+
+    /// <summary>
+    /// PlayerSound取得
+    /// </summary>
+    private PlayerSoundC _cPlayerSound;
+
+    [SerializeField, Tooltip("パンチエフェクト")]
+    private PunchEffectC _prhbPunchEffect;
+
+    [SerializeField, Tooltip("ダメージ")]
+    private GameObject _damageEffect;
+
+    [SerializeField]
+    LayerMask mask;
+
+    float range;
+
+    [SerializeField]
+    bool punchcool;
+
+    [SerializeField]
+    float cooltime;
+
+    float nowcooltime = 0;
+    
     // Start is called before the first frame update
     void Start()
     {
+        playerManager = PlayerManager.Instance;
+
+        Rigidbody2D rb = punchHit.GetComponent<Rigidbody2D>();
+
         //チャージ時間を初期化
         chargeTime = 0;
-
-        //色を取得
-        playerColor = playerSkin.GetComponent<Renderer>();
 
         //ジャンプ取得
         punchjump = GetComponent<Jumper>();
@@ -128,24 +155,34 @@ public class PlayerPunch : MonoBehaviour
         punchHit.SetActive(false);
 
         punchVectol.SetActive(false);
+
+        //PlayerSoundC取得
+        _cPlayerSound = GetComponent<PlayerSoundC>();
+
+        punchcool = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey("joystick button 0"))
+        if (Input.GetKey("joystick button 0") && !PlayerManager.IsPlayerMoveRock && !punchcool ||
+            Input.GetKey("joystick button 1") && !PlayerManager.IsPlayerMoveRock && !punchcool)
         {
             PunchCharge();
+
+            PunchRight();
         }
 
-        if (1 <= punch && Input.GetKey("joystick button 4"))
+        if (1 <= punch && Input.GetKey("joystick button 4") && !PlayerManager.IsPlayerMoveRock)
         {
             Charge = true;
             //パンチの方向を決める
             PunchRotate();
         }
 
-        if (1 <= punch && Input.GetKeyUp("joystick button 0") || 1 <= punch && Input.GetKeyUp("joystick button 4"))
+        if ((1 <= punch && Input.GetKeyUp("joystick button 0") ||
+            1 <= punch && Input.GetKeyUp("joystick button 4") || 
+            1 <= punch && Input.GetKeyUp("joystick button 1") && !PlayerManager.IsPlayerMoveRock))
         {
 
             Debug.Log("パンチ");
@@ -158,8 +195,8 @@ public class PlayerPunch : MonoBehaviour
 
             PunchCheck();
 
-            if (Input.GetKeyUp("joystick button 4") && punchDegree >= 0f && punchDegree <= 200f ||
-                Input.GetKey("joystick button 4") && punchDegree >= 0f && punchDegree <= 200f)
+            if ((Input.GetKeyUp("joystick button 4") && punchDegree >= 0f && punchDegree <= 200f ||
+                Input.GetKey("joystick button 4") && punchDegree >= 0f && punchDegree <= 200f) && !PlayerManager.IsPlayerMoveRock)
             {
                 ShockPunch();
             }
@@ -170,14 +207,21 @@ public class PlayerPunch : MonoBehaviour
 
             punch = 0;
 
-            playerColor.material.color = Color.white;
-
             ChaegeReset();
+
+            punchcool = true;
         }
 
-        if(ispunch)
+        if (ispunch)
         {
             NowPunch();
+        }
+
+        if (PlayerManager.IsPlayerMoveRock) punch = 0;
+
+        if(punchcool)
+        {
+            PunchCoolTime();
         }
     }
 
@@ -187,38 +231,32 @@ public class PlayerPunch : MonoBehaviour
 
         if (punch1 <= chargeTime && chargeTime < punch2)
         {
+            if (punch != 1)
+            {
+                Instantiate(_prhbPunchEffect, punchPos.transform.position, transform.rotation).transform.parent = punchPos.transform;
+                _cPlayerSound.SoundStart(0);
+            }
             punch = 1;
         }
 
         else if (punch2 <= chargeTime && chargeTime < punch3)
         {
+            if (punch != 2)
+            {
+                _cPlayerSound.SoundStart(1);
+            }
             punch = 2;
         }
 
         else if (punch3 <= chargeTime)
         {
+            if (punch != 3)
+            {
+                _cPlayerSound.SoundStart(2);
+            }
             punch = 3;
         }
 
-        switch (punch)
-        {
-
-            case 0:
-                playerColor.material.color = Color.white;
-                break;
-
-            case 1:
-                playerColor.material.color = Color.red;
-                break;
-
-            case 2:
-                playerColor.material.color = Color.green;
-                break;
-            case 3:
-                playerColor.material.color = Color.blue;
-                break;
-
-        }
     }
 
     private void ChaegeReset()
@@ -227,46 +265,82 @@ public class PlayerPunch : MonoBehaviour
 
         punch = 0;
 
-        playerColor.material.color = Color.white;
-
         punchVectol.SetActive(false);
+
+        if (GetComponent<PlayerManager>().IsRight)
+        {
+            punchPos.transform.eulerAngles = new Vector3(0f, 0f, 0f);
+
+            punchRotate = transform.right;
+        }
+        else
+        {
+            punchPos.transform.eulerAngles = new Vector3(0f, 180f, 0f);
+
+            punchRotate = -transform.right;
+        }
+
     }
 
     private void PunchCheck()
     {
         Debug.Log("パンチ発射");
 
+        _cPlayerSound.SoundStart(7);
+
+        PunchRange();
+
         if (punchRayHit = Physics2D.Raycast(punchHit.transform.position,
                                             punchRotate,
-                                            punchHit.transform.localScale.x * 0.5f,511))
+                                            range))
         {
             Debug.Log("パンチ");
             Debug.Log(punchRayHit.collider.gameObject);
             if (punchRayHit.collider)
             {
-                if (punchRayHit.collider.gameObject.tag == "Ground")
+                GameObject damageEffect = Instantiate(_damageEffect, punchHit.transform.position + new Vector3(-1, 1, 0), transform.localRotation);
+                Destroy(damageEffect, 0.2f);
+
+                if (punchRayHit.collider.gameObject.tag == "Ground" &&
+                    Physics2D.Raycast(transform.position,
+                                      -transform.up,
+                                      transform.localScale.y * 0.5f, mask))
                 {
+
                     Debug.Log("当たった");
+                    if (punch != 1)
+                    {
+                        _cPlayerSound.SoundStart(8);
+                    }
+
                     punchjump.Jumppunch = true;
                 }
-
                 else if ((punchRayHit.collider.gameObject.tag == "Enemy"))
                 {
-                    Debug.Log("敵に当たった"+ NowPunchPower);
+                    Debug.Log("敵に当たった" + NowPunchPower);
 
                     punchRayHit.collider.gameObject.GetComponent<EnemyCoreC>().GetBlow(NowPunchPower);
+                    _cPlayerSound.SoundStart(5);
 
                 }
-
                 else if ((punchRayHit.collider.gameObject.tag == "Gimmick"))
                 {
                     Debug.Log("ギミック当たった");
 
-                    punchRayHit.collider.gameObject.GetComponent<GimmickManager>().GimmickHit(NowPunchPower,true,punch);
+                    var right = playerManager.Right();
+
+                    punchRayHit.collider.gameObject.GetComponent<GimmickManager>().GimmickHit(NowPunchPower, right, punch);
+                    _cPlayerSound.SoundStart(5);
                 }
+
+
             }
 
         }
+        Debug.DrawRay(punchHit.transform.position,
+                punchRotate * range,
+                Color.red,
+                5);
     }
 
     /// <summary>
@@ -291,6 +365,15 @@ public class PlayerPunch : MonoBehaviour
             punchDegree += 360f;
         }
 
+        if (horizontal == 0 && vertical == 0)
+        {
+            punchPos.SetActive(false);
+        }
+        else
+        {
+            punchPos.SetActive(true);
+        }
+
         // 右スティックの入力があるとき
         if (horizontal != 0 || vertical != 0)
         {
@@ -301,7 +384,7 @@ public class PlayerPunch : MonoBehaviour
             // 投げ軌道を変更
             punchPos.transform.eulerAngles = new Vector3(0f, 0f, punchDegree);
         }
-        
+
     }
 
     /// <summary>
@@ -314,6 +397,8 @@ public class PlayerPunch : MonoBehaviour
         var shockObj = Instantiate(Shock, punchHit.transform.position, punchPos.transform.rotation);
         // オブジェクトからスクリプト情報を取得
         shockObj.GetComponent<ShockMove>().MoveDirection = punchPos.transform.right;
+
+        _cPlayerSound.SoundStart(9);
     }
 
     /// <summary>
@@ -323,7 +408,7 @@ public class PlayerPunch : MonoBehaviour
     {
         punchnowTime += Time.deltaTime;
 
-        if(punchTime <= punchnowTime)
+        if (punchTime <= punchnowTime)
         {
             ispunch = false;
 
@@ -341,7 +426,7 @@ public class PlayerPunch : MonoBehaviour
             {
                 punchPos.transform.eulerAngles = new Vector3(0f, 180f, 0f);
             }
-            
+
             SonicPunch = false;
 
 
@@ -353,6 +438,19 @@ public class PlayerPunch : MonoBehaviour
         punch = 0;
 
         chargeTime = 0;
+
+        punchVectol.SetActive(false);
+
+        Charge = false;
+
+        if (GetComponent<PlayerManager>().IsRight)
+        {
+            punchPos.transform.eulerAngles = new Vector3(0f, 0f, 0f);
+        }
+        else
+        {
+            punchPos.transform.eulerAngles = new Vector3(0f, 180f, 0f);
+        }
     }
 
     private void PunchPowerScale()
@@ -385,4 +483,57 @@ public class PlayerPunch : MonoBehaviour
         return punchDegree;
     }
 
+    public int PunchLevelSender()
+    {
+        return punch;
+    }
+
+    private void PunchRight()
+    {
+        var hoge = playerManager.Right();
+
+        if (hoge)
+        {
+            punchDegree = 0;
+        }
+        else
+        {
+            punchDegree = 180;
+        }
+    }
+
+    public void PlayerOut()
+    {
+        Charge = false;
+
+        punchVectol.SetActive(false);
+    }
+
+    void PunchRange()
+    {
+        switch (punch)
+        {
+            case 1:
+                range = punchHit.transform.localScale.x * 0.7f;
+                break;
+            case 2:
+                range = punchHit.transform.localScale.x * 2.0f;
+                break;
+            case 3:
+                range = punchHit.transform.localScale.x * 3.5f;
+                break;
+        }
+    }
+
+    void PunchCoolTime()
+    {
+        nowcooltime += Time.deltaTime;
+
+        if(cooltime <= nowcooltime)
+        {
+            punchcool = false;
+
+            nowcooltime = 0;
+        }
+    }
 }

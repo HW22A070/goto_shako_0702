@@ -9,6 +9,12 @@ public class GameOverC : MonoBehaviour
 
     private bool start = false;
 
+    [SerializeField]
+    private SpriteRenderer _playerdead;
+
+    [SerializeField]
+    private Sprite _playerFine;
+
     /// <summary>
     /// 0=Ç‡Ç¡Ç©Ç¢
     /// 1=Ç®ÇÌÇÈ
@@ -18,7 +24,7 @@ public class GameOverC : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        SceneManagementC.PlayerDaed = true;
     }
 
     // Update is called once per frame
@@ -31,17 +37,15 @@ public class GameOverC : MonoBehaviour
             StartCoroutine(Load());
             //audioSource.PlayOneShot(startS);
         }
-        if (Input.GetKeyDown("joystick button 4") && !start)
+        if (Input.GetAxis("Horizontal") > 0.5f && !start)
         {
-            _titleMode--;
-            if (_titleMode < 0) _titleMode = 1;
+            _titleMode = 1;
             _arrowUI.GetComponent<Arrow>().MoveArrow(_titleMode);
             Debug.Log("è„");
         }
-        if (Input.GetKeyDown("joystick button 5") && !start)
+        if (Input.GetAxis("Horizontal") < -0.5f && !start)
         {
-            _titleMode++;
-            if (_titleMode > 1) _titleMode = 0;
+            _titleMode = 0;
             _arrowUI.GetComponent<Arrow>().MoveArrow(_titleMode);
             Debug.Log("â∫");
         }
@@ -49,9 +53,19 @@ public class GameOverC : MonoBehaviour
 
     private IEnumerator Load()
     {
+        if (_titleMode == 0)
+        {
+            _playerdead.sprite = _playerFine;
+        }
         yield return new WaitForSeconds(1.0f);
-        if (_titleMode == 0) SceneManagementC.LoadScene("Stage1Scene");
-        else if (_titleMode == 1)SceneManagementC.LoadScene("TitleScene");
+        if (_titleMode == 0)
+        {
+            SceneManagementC.LoadScene(SceneManagementC.NowScene);
+        }
+        else if (_titleMode == 1)
+        {
+            SceneManagementC.LoadScene("TitleScene");
+        }
     }
 
 }

@@ -5,7 +5,6 @@ using UnityEngine.SocialPlatforms.Impl;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine.Events;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class EnemyCoreC : MonoBehaviour
 {
@@ -85,9 +84,25 @@ public class EnemyCoreC : MonoBehaviour
                 _enemyHp -= attackPower;
                 if (_enemyHp <= 0)DeathStart();
             }
+            else
+            {
+            }
         }
     }
-    
+
+    /// <summary>
+    /// 潰される
+    /// </summary>
+    public void GetScrap()
+    {
+        if (!_isDead)
+        {
+            DamageAction(3);
+            _enemyHp =0;
+            _isDead = true;
+        }
+    }
+
 
 
     /// <summary>
@@ -106,6 +121,9 @@ public class EnemyCoreC : MonoBehaviour
                     DeathStart();
                 }
             }
+            else
+            {
+            }
         }
     }
 
@@ -119,17 +137,23 @@ public class EnemyCoreC : MonoBehaviour
         
     }
 
+    public int HPCheck()
+    {
+        return _enemyHp;
+    }
+
     [Header("0=パンチ 1=衝撃波 2=死")]
     public List<UnityEvent> OnEvent;
 
     /// <summary>
+    /// 
     /// 何らかの衝撃を食らったときの敵ごとの行動
-    /// </summary>
-    /// <param name="id">
     /// 0=パンチ
     /// 1=衝撃波
     /// 2=死行動
-    /// </param>
+    /// 3=圧死
+    /// </summary>
+    /// <param name="id"></param>
     public void DamageAction(int id)
     {
         OnEvent[id].Invoke();

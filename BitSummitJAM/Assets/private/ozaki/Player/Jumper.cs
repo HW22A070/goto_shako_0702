@@ -1,71 +1,39 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-/// <summary>
-/// ƒWƒƒƒ“ƒv‚ğŠÇ—‚·‚éƒNƒ‰ƒX
-/// </summary>
 public class Jumper : MonoBehaviour
 {
+
     [SerializeField]
-    [Tooltip("ƒWƒƒƒ“ƒv‚Ì‰‘¬")]
+    private PlayerCamera playerCamera;
+
+    [SerializeField]
     private float _v0;
 
     [SerializeField, Min(0.001f)]
-    [Tooltip("ƒWƒƒƒ“ƒv—Í")]
     private float _jumpPow;
 
     [SerializeField]
-    [Tooltip("d—Í")]
     private float _gravity;
 
     [SerializeField, Min(1)]
-    [Tooltip("’ïR—Í")]
     private float _resistance;
 
     [SerializeField]
-    [Tooltip("¿—Ê")]
     private float _mass;
 
     [SerializeField, Min(1)]
-    [Tooltip("ƒWƒƒƒ“ƒv‰Â”\‚È‰ñ”")]
     private int _defaultJumpCount;
 
-    /// <summary>
-    /// LƒXƒeƒBƒbƒN‚Ì“ü—Íæ“¾—p
-    /// </summary>
     private float vertical;
 
-    /// <summary>
-    /// c•ûŒü‚Ì‘¬“x
-    /// </summary>
     private float _verticalVelocity = 0;
 
-    /// <summary>
-    /// I’[‘¬“x
-    /// </summary>
     private float _finalVelocity;
-
-    /// <summary>
-    /// ‘O‰ñ‚ÌÚ’n”»’è‚ÌŒ‹‰Ê
-    /// </summary>
     private bool _isLastGround = true;
-    /// <summary>
-    /// ƒWƒƒƒ“ƒv‚ği‚éˆ×‚Ìƒ^ƒCƒ}[
-    /// </summary>
     private float _jumpTimer = 0;
 
-    /// <summary>
-    /// c‚èƒWƒƒƒ“ƒv‰Â”\‰ñ”
-    /// </summary>
     private int _jumpCount;
 
-    /// <summary>
-    /// "Ground"ƒŒƒCƒ„[‚Ì”Ô†
-    /// </summary>
     [SerializeField]
     private LayerMask groundMask;
 
@@ -80,51 +48,60 @@ public class Jumper : MonoBehaviour
     private float punch;
 
     [SerializeField]
-    [Tooltip("ƒpƒ“ƒ`ƒWƒƒƒ“ƒv1")]
     private float punchone;
     [SerializeField]
-    [Tooltip("ƒpƒ“ƒ`ƒWƒƒƒ“ƒv2")]
     private float punchtwo;
     [SerializeField]
-    [Tooltip("ƒpƒ“ƒ`ƒWƒƒƒ“ƒv3")]
     private float punchthree;
+
+    /// <summary>
+    /// PlayerSoundï¿½æ“¾
+    /// </summary>
+    private PlayerSoundC _cPlayerSound;
+
+    private PlayerPunch _punch;
+
     // Start is called before the first frame update
     private void Start()
     {
-        //I’[‘¬“x‚ğæ“¾
         UpdateFinalVelocity();
 
-        //ƒWƒƒƒ“ƒv‰ñ”‚ğ‰Šú‰»
         _jumpCount = _defaultJumpCount;
 
+        _cPlayerSound = GetComponent<PlayerSoundC>();
+
+        _punch = GetComponent<PlayerPunch>();
     }
 
-    //GetKeyUp‚È‚ÇAFixedUpdate‚Å“s‡‚ª‚Â‚©‚È‚¢‚à‚Ì‚Í‚±‚Á‚¿‚É‘‚­
     private void Update()
     {
 #if UNITY_EDITOR
 
-        //ƒfƒoƒbƒO—p‚Éˆê’è‚Ì‚‚³‚ğ‰º‰ñ‚Á‚½‚çƒƒO‚ğo‚µ‚ÄƒvƒŒƒCƒ‚[ƒhI—¹
         if (this.transform.position.y < -20)
         {
             UnityEditor.EditorApplication.isPlaying = false;
 
-            Debug.Log("ƒvƒŒƒCƒ„[‚Ì‚‚³‚ªˆê’è‚ğ‰º‰ñ‚Á‚½ˆ×Aplayƒ‚[ƒh‚ğI—¹‚µ‚Ü‚µ‚½");
         }
 
 #endif
+        if (Input.GetKeyDown("joystick button 2") && _jumpCount == 1 ||
+            Input.GetKeyDown("joystick button 3") && _jumpCount == 1)
+        {
+            JumpSE();
+        }
 
-        //ƒWƒƒƒ“ƒvƒL[‚ª—£‚³‚ê‚½‚ç
-        if (Input.GetKeyUp("joystick button 2"))
+        if (Input.GetKeyUp("joystick button 2") && !PlayerManager.IsPlayerMoveRock ||
+            Input.GetKeyUp("joystick button 3") && !PlayerManager.IsPlayerMoveRock)
         {
             _jumpTimer = 0;
 
-            //‚à‚µ‹ó’†‚Å—£‚³‚ê‚½‚çƒJƒEƒ“ƒg‚ğŒ¸‚ç‚·
+            _punch.PunchReset();
+
             if (!CheckGround())
                 --_jumpCount;
         }
 
-        if (Input.GetKeyUp("joystick button 4"))
+        if (Input.GetKeyUp("joystick button 4") && !PlayerManager.IsPlayerMoveRock)
         {
             int hoge = GetComponent<PlayerPunch>().punch;
 
@@ -147,20 +124,17 @@ public class Jumper : MonoBehaviour
 
             //Jumppunch = true;
 
-            //‚à‚µ‹ó’†‚Å—£‚³‚ê‚½‚çƒJƒEƒ“ƒg‚ğŒ¸‚ç‚·
             if (!CheckGround())
                 --_jumpCount;
 
         }
 
-        //Ú’nó‹µ‚ª•Ï‰»‚µ‚½‚©H(‚½‚¾‚µAƒWƒƒƒ“ƒv‚É‚æ‚Á‚Ä‹ó’†‚Éo‚½‚Æ‚«‚ÍŒŸØ‚µ‚È‚¢)
         if (_isLastGround != CheckGround())
         {
-            //true‚©‚çfalse‚ÉØ‚è‘Ö‚í‚Á‚½‚È‚çƒWƒƒƒ“ƒv‰ñ”‚ğ1‚ÂŒ¸‚ç‚·
-            //false‚©‚çtrue‚ÉØ‚è‘Ö‚í‚Á‚½‚È‚çƒfƒtƒHƒ‹ƒg‚É–ß‚·
+            jumppunch = false;
+
             if (_isLastGround)
             {
-                //‚à‚µƒWƒƒƒ“ƒv‚Å‹ó’†‚Éo‚Ä‚È‚¢‚È‚ç‚ÎƒJƒEƒ“ƒg‚ğ‘¦À‚É‚PŒ¸‚ç‚·
                 if (_jumpTimer < Mathf.Epsilon)
                     --_jumpCount;
             }
@@ -169,17 +143,15 @@ public class Jumper : MonoBehaviour
                 _jumpCount = _defaultJumpCount;
             }
 
-            jumppunch = false;
+
+
         }
 
-        //Ú’nó‹µ‚ğXV
         _isLastGround = CheckGround();
 
-        //’n–Ê‚É–„‚Ü‚Á‚Ä‚¢‚½‚çã•ûŒü‚É•â³‚ğ‚©‚¯‚é
         if (CheckBury())
             Correction_Up();
 
-        //“Vˆä‚É–„‚Ü‚Á‚Ä‚¢‚½‚ç‰º•ûŒü‚É•â³‚ğ‚©‚¯‚é
         if (OnCeiling())
             Correction_Down();
     }
@@ -187,34 +159,28 @@ public class Jumper : MonoBehaviour
     // Update is called once per frame
     private void FixedUpdate()
     {
-        //Ú’n‚µ‚Ä‚¢‚é‚©‚Å•ªŠò
         if (CheckGround())
         {
-            //Ú’n‚µ‚Ä‚¢‚½‚çc•ûŒü‚Ì‘¬“x‚ğ0‚É‚·‚é
             _verticalVelocity = 0;
+
         }
         else
         {
-            //d—Í‚Ì“K—p
             ApplyingGravity();
         }
 
-        //ƒWƒƒƒ“ƒv‰Â”\‚È‚ÉAƒWƒƒƒ“ƒvƒL[‚ª‰Ÿ‰º‚³‚ê‚½‚ç
-        if (Input.GetKey("joystick button 2") && JumpAble())
+        if (Input.GetKey("joystick button 2") && JumpAble() && !PlayerManager.IsPlayerMoveRock ||
+            Input.GetKey("joystick button 3") && JumpAble() && !PlayerManager.IsPlayerMoveRock)
         {
             Jump();
         }
 
-        //‚à‚µ“Vˆä‚É‚Ô‚Â‚©‚Á‚½‚Æ‚«ã•ûŒü‚ÉˆÚ“®‚µ‚æ‚¤‚Æ‚µ‚Ä‚¢‚½‚ç
         if (OnCeiling() && _verticalVelocity > 0)
         {
-            //‘¬“x‚ğ0‚É
             _verticalVelocity = 0;
 
-            //ƒWƒƒƒ“ƒv—p‚Ìƒ^ƒCƒ}[‚É‰‘¬‚ğ“ü‚ê‚Ä—]Œv‚ÉƒWƒƒƒ“ƒv‚µ‚È‚¢‚æ‚¤‚É
             _jumpTimer = _v0;
 
-            //ƒWƒƒƒ“ƒv‰ñ”‚ğŒ¸‚ç‚·
             --_jumpCount;
         }
 
@@ -223,93 +189,72 @@ public class Jumper : MonoBehaviour
             JumpPunch();
         }
 
-        //“®‚­
         Move();
+
+
+        GetComponent<PlayerAnimC>()._isJumping = !JumpAble();
     }
 
-    /// <summary>
-    /// I’[‘¬“x‚ğXV‚·‚éŠÖ”
-    /// </summary>
     private void UpdateFinalVelocity()
     {
-        //I’[‘¬“x‚ğ’è‹`
         _finalVelocity = _mass * _gravity / _resistance;
     }
 
-    /// <summary>
-    /// ƒWƒƒƒ“ƒv‚ğ‚·‚éŠÖ”
-    /// </summary>
     private void Jump()
     {
         GetComponent<PlayerPunch>().PunchReset();
 
         _jumpTimer += Time.deltaTime / _jumpPow;
 
-        //‚à‚µAƒ^ƒCƒ}[‚ª‰‘¬‚ğ’´‚¦‚Ä‚½‚ç‘¬“x‚ÉG‚ç‚È‚¢
-        //¦—‰º‘¬“x‚ªã‚ª‚é‚©‚ç
-        if (_v0 < _jumpTimer || _verticalVelocity > _finalVelocity) return;
-
-        //’Ç‰Á‚Ì‘¬“x‚ğ—^‚¦‚é
+        if (_v0 < _jumpTimer || _verticalVelocity > _finalVelocity)
+        {
+            return;
+        }
+        _cPlayerSound.SoundStart(6);
         _verticalVelocity = _v0 - _jumpTimer;
     }
-    /// <summary>
-    /// ƒpƒ“ƒ`ƒ`ƒƒ[ƒW
-    /// </summary>
+
+    private void JumpSE()
+    {
+        _cPlayerSound.SoundStart(6);
+    }
     public void JumpPunch()
     {
-        //ƒpƒ“ƒ`‚Ì‰‘¬‚É‚kƒXƒeƒBƒbƒN‚Ì“ü—Í‚ğ‰ÁZ
         float _v1 = _v0 + Mathf.Abs(vertical) * punch;
 
         _jumpTimer += Time.deltaTime / _jumpPow;
 
-        //‚à‚µAƒ^ƒCƒ}[‚ª‰‘¬‚ğ’´‚¦‚Ä‚½‚ç‘¬“x‚ÉG‚ç‚È‚¢
-        //¦—‰º‘¬“x‚ªã‚ª‚é‚©‚ç
         if (_v1 < _jumpTimer || _verticalVelocity > _finalVelocity) return;
 
-        //’Ç‰Á‚Ì‘¬“x‚ğ—^‚¦‚é
         _verticalVelocity = _v1 - _jumpTimer;
 
     }
 
-    /// <summary>
-    /// ÀÛ‚É“®‚©‚·ŠÖ”
-    /// </summary>
     private void Move()
     {
         this.transform.position += this.transform.up * _verticalVelocity;
     }
 
-    /// <summary>
-    ///‰º•ûŒü‚É•â³‚ğ‚©‚¯‚éŠÖ”
-    /// </summary>
     private void Correction_Down()
     {
-        //ãŒü‚«‚ÌRay2‚Â‚ğæ“¾
         var rayTupleData = CreateRay_Up();
 
-        //‰E‘¤‚©‚çŠm”F‚·‚é
         RaycastHit2D hit = Physics2D.Raycast(
                                 rayTupleData.Item1.origin,
                                 rayTupleData.Item1.direction,
                                 this.transform.localScale.y * 0.5f,
                                 groundMask);
 
-        //‚à‚µÕ“Ë•¨‚ğŒŸ’mo—ˆ‚½‚ç
         if (hit.collider != null)
         {
-            //“–‚½‚Á‚½ˆÊ’u‚ÆŒ»İˆÊ’u‚Ì’¼ü‹——£‚ğæ“¾
             var distance = Mathf.Abs(this.transform.position.y - hit.point.y);
 
-            //ˆÚ“®—Ê‚ğŒvZ
             var moveVal = Mathf.Abs(this.transform.localScale.y * 0.5f - distance);
 
-            //Œ»İ‚ÌÀ•W‚ğæ“¾
             var currentPosition = this.transform.position;
 
-            //ˆÚ“®‚µ‚½Œã‚ÌÀ•W‚ğŒvZ
             currentPosition.y -= moveVal;
 
-            //À•W‚ğXV
             this.transform.position = currentPosition;
         }
         else
@@ -320,57 +265,39 @@ public class Jumper : MonoBehaviour
                        this.transform.localScale.y * 0.6f,
                        groundMask);
 
-            //‚à‚µ‚±‚±‚Å‚àƒIƒuƒWƒFƒNƒg‚ğæ“¾o—ˆ‚È‚¯‚ê‚Î‚±‚±‚ÅI—¹
             if (hit.collider == null) return;
 
-            //“–‚½‚Á‚½ˆÊ’u‚ÆŒ»İˆÊ’u‚Ì’¼ü‹——£‚ğæ“¾
             var distance = Mathf.Abs(this.transform.position.y - hit.point.y);
 
-            //ˆÚ“®—Ê‚ğŒvZ
             var moveVal = Mathf.Abs(this.transform.localScale.y * 0.5f - distance);
 
-            //Œ»İ‚ÌÀ•W‚ğæ“¾
             var currentPosition = this.transform.position;
 
-            //ˆÚ“®‚µ‚½Œã‚ÌÀ•W‚ğŒvZ
             currentPosition.y -= moveVal;
 
-            //À•W‚ğXV
             this.transform.position = currentPosition;
         }
     }
 
-    /// <summary>
-    /// ã•ûŒü‚É•â³‚ğ‘‚¯‚éŠÖ”
-    /// </summary>
     private void Correction_Up()
     {
-        //‰ºŒü‚«‚ÌRay2‚Â‚ğæ“¾
         var rayTupleData = CreateRay_Down();
 
-        //‰E‘¤‚©‚çŠm”F‚·‚é
         RaycastHit2D hit = Physics2D.Raycast(
                                 rayTupleData.Item1.origin,
                                 rayTupleData.Item1.direction,
                                 this.transform.localScale.y * 0.5f,
                                 groundMask);
-
-        //‚à‚µÕ“Ë•¨‚ğŒŸ’mo—ˆ‚½‚ç
         if (hit.collider != null)
         {
-            //“–‚½‚Á‚½ˆÊ’u‚ÆŒ»İˆÊ’u‚Ì’¼ü‹——£‚ğæ“¾
             var distance = Mathf.Abs(this.transform.position.y - hit.point.y);
 
-            //ˆÚ“®—Ê‚ğŒvZ
             var moveVal = Mathf.Abs(this.transform.localScale.y * 0.5f - distance);
 
-            //Œ»İ‚ÌÀ•W‚ğæ“¾
             var currentPosition = this.transform.position;
 
-            //ˆÚ“®‚µ‚½Œã‚ÌÀ•W‚ğŒvZ
             currentPosition.y += moveVal;
 
-            //À•W‚ğXV
             this.transform.position = currentPosition;
         }
         else
@@ -381,48 +308,32 @@ public class Jumper : MonoBehaviour
                        this.transform.localScale.y * 0.5f,
                        groundMask);
 
-            //‚à‚µ‚±‚±‚Å‚àƒIƒuƒWƒFƒNƒg‚ğæ“¾o—ˆ‚È‚¯‚ê‚Î‚±‚±‚ÅI—¹
             if (hit.collider == null) return;
 
-            //“–‚½‚Á‚½ˆÊ’u‚ÆŒ»İˆÊ’u‚Ì’¼ü‹——£‚ğæ“¾
             var distance = Mathf.Abs(this.transform.position.y - hit.point.y);
 
-            //ˆÚ“®—Ê‚ğŒvZ
             var moveVal = Mathf.Abs(this.transform.localScale.y * 0.5f - distance);
 
-            //Œ»İ‚ÌÀ•W‚ğæ“¾
             var currentPosition = this.transform.position;
 
-            //ˆÚ“®‚µ‚½Œã‚ÌÀ•W‚ğŒvZ
             currentPosition.y += moveVal;
 
-            //À•W‚ğXV
             this.transform.position = currentPosition;
         }
     }
 
-    /// <summary>
-    /// d—Í‚ğ“K—p‚·‚éŠÖ”
-    /// </summary>
     private void ApplyingGravity()
     {
-        //I’[‘¬“x‚É’B‚µ‚Ä‚È‚¯‚ê‚Îd—Í‚ğ‚©‚¯‚é
         if (_verticalVelocity < _finalVelocity * -1) return;
 
         _verticalVelocity -= _gravity;
 
     }
 
-    /// <summary>
-    /// Ú’n‚µ‚Ä‚¢‚é‚©‚ğ•Ô‚·
-    /// </summary>
-    /// <returns>’n–Ê‚ÉÚ’n‚µ‚Ä‚¢‚é</returns>
     private bool CheckGround()
     {
-        //‰ºŒü‚«‚ÌRay2‚Â‚ğæ“¾
         var rayTupleData = CreateRay_Down();
 
-        //‰E‚©¶‚Ç‚¿‚ç‚©‚ÅƒRƒ‰ƒCƒ_[‚É‚Ô‚Â‚©‚Á‚½‚çtrue”»’è
         return
                 Physics2D.Raycast(
                 rayTupleData.Item1.origin,
@@ -438,16 +349,10 @@ public class Jumper : MonoBehaviour
                 );
     }
 
-    /// <summary>
-    /// ’n–Ê‚É–„‚Ü‚Á‚Ä‚¢‚é‚©‚ğ•Ô‚·
-    /// </summary>
-    /// <returns>’n–Ê‚ÉÚ’n‚µ‚Ä‚¢‚é</returns>
     private bool CheckBury()
     {
-        //‰ºŒü‚«‚ÌRay2‚Â‚ğæ“¾
         var rayTupleData = CreateRay_Down();
 
-        //CheckGround‚æ‚è’Z‚¢Ray‚ğ”ò‚Î‚µ‚Ä”»’f‚·‚é
         return
                 Physics2D.Raycast(
                 rayTupleData.Item1.origin,
@@ -462,60 +367,34 @@ public class Jumper : MonoBehaviour
                 groundMask
                 );
     }
-
-    /// <summary>
-    /// ‰ºŒü‚«‚ÌRay‚ğ¶¬‚·‚éŠÖ”
-    /// </summary>
-    /// <returns>
-    /// Item1 = Œü‚©‚Á‚Ä‰E’[‚ªŒ´“_‚ÌRay
-    /// Item2 = Œü‚©‚Á‚Ä¶’[‚ªŒ´“_‚ÌRay
-    /// </returns>
     private (Ray, Ray) CreateRay_Down()
     {
-        //‰E‘¤‚ÌRay‚ÌŒ´“_‚ğæ“¾
         Vector3 rightOrigin = this.transform.position;
         rightOrigin.x += this.transform.localScale.x * 0.4f;
 
-        //¶‘¤‚ÌRay‚ÌŒ´“_‚ğæ“¾
         Vector3 leftOrigin = this.transform.position;
         leftOrigin.x -= this.transform.localScale.x * 0.4f;
 
-        //ì¬‚µ‚½Ray2‚Â‚ğ•Ô‚·
         return (new Ray(rightOrigin, -this.transform.up),
                 new Ray(leftOrigin, -this.transform.up));
     }
 
-    /// <summary>
-    /// Ray‚ğ¶¬‚·‚éŠÖ”
-    /// </summary>
-    /// <returns>
-    /// Item1 = Œü‚©‚Á‚Ä‰E’[‚ªŒ´“_‚ÌRay
-    /// Item2 = Œü‚©‚Á‚Ä¶’[‚ªŒ´“_‚ÌRay
-    /// </returns>
     private (Ray, Ray) CreateRay_Up()
     {
-        //‰E‘¤‚ÌRay‚ÌŒ´“_‚ğæ“¾
         Vector3 rightOrigin = this.transform.position;
         rightOrigin.x += this.transform.localScale.x * 0.4f;
 
-        //¶‘¤‚ÌRay‚ÌŒ´“_‚ğæ“¾
         Vector3 leftOrigin = this.transform.position;
         leftOrigin.x -= this.transform.localScale.x * 0.4f;
 
-        //ì¬‚µ‚½Ray2‚Â‚ğ•Ô‚·
         return (new Ray(rightOrigin, this.transform.up),
                 new Ray(leftOrigin, this.transform.up));
     }
 
-    /// <summary>
-    /// “Vˆä‚É’B‚µ‚½‚©‚ğ•Ô‚·ŠÖ”
-    /// </summary>
     private bool OnCeiling()
     {
-        //ãŒü‚«‚ÌRay‚ğì¬
         var rayTupleData = CreateRay_Up();
 
-        //“Vˆä‚É¶‰E‚¢‚¸‚ê‚©‚ÌRay‚ª‚Ô‚Â‚©‚Á‚½‚©‚ğ•Ô‚·
         return
              Physics2D.Raycast(
                     rayTupleData.Item1.origin,
@@ -531,9 +410,6 @@ public class Jumper : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// ƒWƒƒƒ“ƒv‰Â”\‚©‚ğ•Ô‚·ŠÖ”
-    /// </summary>
     private bool JumpAble()
     {
         return _jumpCount > 0;

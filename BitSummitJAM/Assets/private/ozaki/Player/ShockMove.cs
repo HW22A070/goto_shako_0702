@@ -22,6 +22,9 @@ public class ShockMove : MonoBehaviour
     /// </summary>
     private RaycastHit2D _shockToEnemyRayHit;
 
+    [SerializeField, Tooltip("ƒ_ƒ[ƒW")]
+    private GameObject _damageEffect;
+
     public Vector3 MoveDirection
     {
         get => moveDirection;
@@ -64,8 +67,9 @@ public class ShockMove : MonoBehaviour
         _shockToEnemyRayHit = Physics2D.Raycast(_shockRay.origin, _shockRay.direction, 511);
         if (_shockToEnemyRayHit)
         {
-
-            if(_shockToEnemyRayHit.collider.CompareTag("Enemy"))
+            GameObject damageEffect = Instantiate(_damageEffect, _shockRay.origin + new Vector3(-1, 1, 0), transform.localRotation);
+            Destroy(damageEffect, 0.2f);
+            if (_shockToEnemyRayHit.collider.CompareTag("Enemy"))
             {
                 _shockToEnemyRayHit.collider.gameObject.GetComponent<EnemyCoreC>().GetSonic();
                 Destroy(gameObject);
@@ -73,7 +77,7 @@ public class ShockMove : MonoBehaviour
 
             if(_shockToEnemyRayHit.collider.CompareTag("Gimmick"))
             {
-                _shockToEnemyRayHit.collider.gameObject.GetComponent<GimmickManager>().GimmickHit();
+                _shockToEnemyRayHit.collider.gameObject.GetComponent<GimmickManager>().ShockGimmickHit();
 
                 Destroy(gameObject);
             }

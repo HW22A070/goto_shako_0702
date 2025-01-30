@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class YadokariC : MonoBehaviour
 {
+
     /// <summary>
     /// ヤドカリ行動モード
     /// 0=通常時
@@ -14,8 +15,15 @@ public class YadokariC : MonoBehaviour
     /// 4=床突き刺さり
     /// 5=復帰中
     /// 6=逃走（撃破）
+    /// 7=圧死
     /// </summary>
-    private int _yadokariMode;
+    /// [SerializeField]
+    private int _yadokariMode=0;
+
+    /// <summary>
+    /// スタート後着地したか
+    /// </summary>
+    private bool _isSet;
 
     /// <summary>
     /// プレイヤー情報
@@ -113,13 +121,16 @@ public class YadokariC : MonoBehaviour
     [SerializeField, Tooltip("重力最大値、重力加速度")]
     private float _gravityMax=0.02f, _gravityDelta=0.01f;
 
+    [SerializeField]
+    private AudioClip _acDeath, _acDamage, _acBlocked,_acClow, _acSmashed,_acWakeUp,_acStinging;
+
 
     // Start is called before the first frame update
     void Start()
     {
         _gameobjectPlayer = GameObject.Find("PlayerManager");
 
-        GetComponent<GraphicC>().ResetAnimation(0);
+        //GetComponent<GraphicC>().ResetAnimation(0);
         //無敵モードオン
         GetComponent<EnemyCoreC>()._isGetBlowAble = false;
         //初期位置登録
@@ -140,10 +151,16 @@ public class YadokariC : MonoBehaviour
         _yadokariRay = new Ray(_positionOwnNow, new Vector3(0, 0, Mathf.Infinity));
 
         //壁あたり判定（当たったら引き返し）
-        _yadokariToWallRayHitR = Physics2D.Raycast(_yadokariRay.origin + transform.right * 1.2f * transform.localScale.x - transform.up, _yadokariRay.direction, 10, 8);
-        _yadokariToWallRayHitL = Physics2D.Raycast(_yadokariRay.origin - transform.right * 1.2f * transform.localScale.x - transform.up, _yadokariRay.direction, 10, 8);
+        _yadokariToWallRayHitR = Physics2D.Raycast(_yadokariRay.origin + (transform.right * 0.5f) + (-transform.up * transform.localScale.y * 0.3f), _yadokariRay.direction, 10, 8);
+        _yadokariToWallRayHitL = Physics2D.Raycast(_yadokariRay.origin - (transform.right * 0.5f) + (-transform.up * transform.localScale.y * 0.3f), _yadokariRay.direction, 10, 8);
         //床あたり判定（当たらなくなったら引き返し）
-        _yadokariToFloorRayHit = Physics2D.Raycast(_yadokariRay.origin - transform.up * 1.2f * transform.localScale.x, _yadokariRay.direction, 10, 8);
+        _yadokariToFloorRayHit = Physics2D.Raycast(_yadokariRay.origin - (transform.up * transform.localScale.y * 1.0f), _yadokariRay.direction, 10, 8);
+
+        //壁に挟まれたら埋まっているとみなし這い上がる(死んでないとき限定)
+        if (_yadokariToWallRayHitR && _yadokariToWallRayHitL && _yadokariToFloorRayHit&&_yadokariMode<6)
+        {
+            transform.position += transform.up * 0.2f;
+        }
 
         //通常時
         if (_yadokariMode == 0)
@@ -152,14 +169,12 @@ public class YadokariC : MonoBehaviour
             transform.position += transform.right * _walkSpeed;
 
             //座標Uターン
-            if ((_positionOwnNow.x >= _positionOwnFirst.x + _turnBackDistance
+            /*if ((_positionOwnNow.x >= _positionOwnFirst.x + _turnBackDistance
                 || _positionOwnNow.x < _positionOwnFirst.x) && _turnBackDistance != 0)
             {
                 TurnBack();
-            }
+            }*/
 
-            //レイ定義
-            
             if (_yadokariToWallRayHitR || _yadokariToWallRayHitL)
             {
                 TurnBack();
@@ -168,6 +183,7 @@ public class YadokariC : MonoBehaviour
             //床まで落ちる
             if (_yadokariToFloorRayHit)
             {
+                _isSet = true;
                 _gravityScale = 0;
             }
             else
@@ -177,7 +193,11 @@ public class YadokariC : MonoBehaviour
                 if (_gravityScale < _gravityMax) _gravityScale += _gravityDelta;
                 else _gravityScale = _gravityMax;
                 Debug.Log("崖");
-                TurnBack();
+                //スタート後着地するまで回転しない。プルプルしちゃう
+                if (_isSet)
+                {
+                    TurnBack();
+                }
             }
 
             //発見
@@ -201,7 +221,12 @@ public class YadokariC : MonoBehaviour
                 //壁も崖もなければ進む
                 if (!_yadokariToWallRayHitR && !_yadokariToWallRayHitL&& _yadokariToFloorRayHit)
                 {
+                    
                     transform.position += transform.right * _walkSpeedChase;
+                }
+                else
+                {
+                    transform.position -= transform.right * _walkSpeedChase*10;
                 }
                 
             }
@@ -212,6 +237,10 @@ public class YadokariC : MonoBehaviour
                 if (!_yadokariToWallRayHitR && !_yadokariToWallRayHitL&& _yadokariToFloorRayHit)
                 {
                     transform.position -= transform.right * _walkSpeedChase;
+                }
+                else
+                {
+                    transform.position += transform.right * _walkSpeedChase * 10;
                 }
             }
 
@@ -227,7 +256,6 @@ public class YadokariC : MonoBehaviour
                 if (_gravityScale < _gravityMax) _gravityScale += _gravityDelta;
                 else _gravityScale = _gravityMax;
                 Debug.Log("崖");
-                TurnBack();
             }
 
             //プレイヤーあたり判定（当たったら攻撃）
@@ -297,10 +325,21 @@ public class YadokariC : MonoBehaviour
         //死行動
         else if (_yadokariMode==6)
         {
-            _spriteYadokari.flipY = true;
-            //_deathMoveSpeed -= _deathMoveDeltaY;
-            //ひっくり返って落ちてゆく
-            transform.position += new Vector3(0, 0.01f, 0);
+            GetComponent<SpriteRenderer>().sortingOrder = -1;
+            transform.localEulerAngles = Vector3.zero;
+            _spriteYadokari.flipY = false;
+            _spriteYadokari.flipX = true;
+            //走っていく
+            transform.position += new Vector3(0.01f, -0.01f, 0);
+        }
+
+        //圧死行動
+        else if (_yadokariMode == 7)
+        {
+            GetComponent<SpriteRenderer>().sortingOrder = -1;
+            transform.localEulerAngles = Vector3.zero;
+            _spriteYadokari.flipY = false;
+            _spriteYadokari.flipX = true;
         }
 
     }
@@ -313,6 +352,7 @@ public class YadokariC : MonoBehaviour
     private IEnumerator AttackAnimation(GameObject targetPlayer)
     {
         GetComponent<GraphicC>().ResetAnimation(2);
+        GetComponent<AudioSource>().PlayOneShot(_acClow);
         Debug.Log("ヤドカリこうげき！");
         //Debug.Log(targetPlayer.GetComponentInParent<PlayerManager>().name);
         //Debug.Log(targetPlayer.GetComponentInParent<PlayerManager>().Hp);
@@ -330,6 +370,7 @@ public class YadokariC : MonoBehaviour
         //通常か移動中なら衝撃波効果あり
         if (0 <= _yadokariMode && _yadokariMode <= 1)
         {
+            GetComponent<AudioSource>().PlayOneShot(_acSmashed);
             GetComponent<GraphicC>().ResetAnimation(11);
             _yadokariMode = 3;
             _smashJumpValue = (540 / _smashRotationValue) * 0.03f;
@@ -342,9 +383,9 @@ public class YadokariC : MonoBehaviour
     /// <returns></returns>
     private IEnumerator DownAction()
     {
-
         yield return new WaitForSeconds(3.0f);
         _yadokariMode = 5;
+        GetComponent<AudioSource>().PlayOneShot(_acWakeUp);
     }
     
     /// <summary>
@@ -354,12 +395,11 @@ public class YadokariC : MonoBehaviour
     {
         if (_yadokariMode == 4)
         {
-            Debug.Log("殻が！");
-            //StartCoroutine(KnockBack());
+            GetComponent<AudioSource>().PlayOneShot(_acDamage);
         }
         else
         {
-            Debug.Log("殻に守られた俺にパンチは効かないねぇ");
+            GetComponent<AudioSource>().PlayOneShot(_acBlocked);
         }
     }
 
@@ -368,10 +408,26 @@ public class YadokariC : MonoBehaviour
     /// </summary>
     public void OnDeath()
     {
+        gameObject.layer = 0;
+        GetComponent<AudioSource>().PlayOneShot(_acDeath);
         GetComponent<GraphicC>().ResetAnimation(1);
         StopAllCoroutines();
         _currentCoroutine = null;
         _yadokariMode = 6;
+        Destroy(gameObject, 5.0f);
+    }
+
+    /// <summary>
+    /// 圧死
+    /// </summary>
+    public void OnScrap()
+    {
+        gameObject.layer = 0;
+        GetComponent<AudioSource>().PlayOneShot(_acDeath);
+        GetComponent<GraphicC>().ResetAnimation(16);
+        StopAllCoroutines();
+        _currentCoroutine = null;
+        _yadokariMode = 7;
         Destroy(gameObject, 1.0f);
     }
 
@@ -380,7 +436,7 @@ public class YadokariC : MonoBehaviour
     /// </summary>
     private void TurnBack()
     {
-        transform.position += -transform.right * _walkSpeed * 2;
+        transform.position -= transform.right * _walkSpeed * 5;
         _walkSpeed *= -1;
         LookSet();
     }
@@ -392,6 +448,18 @@ public class YadokariC : MonoBehaviour
     {
         if (_walkSpeed < 0) _spriteYadokari.flipX = false;
         else _spriteYadokari.flipX = true;
+    }
+
+    private void OnBecameInvisible()
+    {
+        //通常時に画面の外にいたら休止
+        if (_yadokariMode == 0) _yadokariMode = 999;
+    }
+
+    private void OnBecameVisible()
+    {
+        //休止時に画面の中にいたら再開
+        if (_yadokariMode == 999) _yadokariMode = 0;
     }
 
 }

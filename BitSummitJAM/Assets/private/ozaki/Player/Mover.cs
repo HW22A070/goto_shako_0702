@@ -1,19 +1,14 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEngine;
-using static UnityEngine.RuleTile.TilingRuleOutput;
-
 public class Mover : MonoBehaviour
 {
     [SerializeField]
+    [Tooltip("地面のレイヤー設定")]
     private LayerMask groundMaskNumber;
-
 
     [SerializeField]
     [Tooltip("動く速さ")]
-    private float _speed;
+    private float speed;
 
     [SerializeField]
     [Tooltip("空中機動力")]
@@ -25,11 +20,11 @@ public class Mover : MonoBehaviour
 
     [SerializeField]
     [Tooltip("最高速度")]
-    private float _maxSpeed;
+    private float maxSpeed;
 
     [SerializeField]
     [Tooltip("空中最高速度")]
-    private float _skyMaxSpeed;
+    private float skyMaxSpeed;
 
     [SerializeField]
     [Tooltip("地面についているか")]
@@ -54,7 +49,6 @@ public class Mover : MonoBehaviour
     [Tooltip("パンチジャンプ3")]
     private float punchthree;
 
-
     private Vector3 playerPos;
     // Start is called before the first frame update
     void Start()
@@ -66,27 +60,27 @@ public class Mover : MonoBehaviour
         Ground = true;
 
         //地面のRaycast用のマスクを取得
-        LayerMask mask = 1 << groundMaskNumber;
+        LayerMask mask = groundMaskNumber;
     }
 
     private void Update()
     {
         //壁に触れていたら
-        if (CheckWall_Right() && _speed > 0)
+        if (CheckWall_Right() && speed > 0)
         {
-            _speed = 0;
+            speed = 0;
 
             punch = 0;
         }
-        if (CheckWall_Left() && _speed < 0)
+        if (CheckWall_Left() && speed < 0)
         {
-            _speed = 0;
+            speed = 0;
 
             punch = 0;
         }
 
         //LBボタンが押されたら
-        if (Input.GetKeyUp("joystick button 4"))
+        if (Input.GetKeyUp("joystick button 4") && !PlayerManager.IsPlayerMoveRock)
         {
             //パンチを取得
             int hoge = GetComponent<PlayerPunch>().punch;
@@ -130,14 +124,6 @@ public class Mover : MonoBehaviour
             Ground = false;
         }
 
-        //if (Ground == false)
-        //{
-        //    if (Physics2D.Raycast(playerPos, -transform.up, transform.localScale.y))
-        //    {
-        //        punch = 0;
-        //    }
-        //}
-
         //座標を更新
         playerPos = transform.position;
     }
@@ -149,28 +135,29 @@ public class Mover : MonoBehaviour
         if (GetComponent<PlayerPunch>().Charge)
         {
             //動く速さを0に
-            _speed = 0;
+            speed = 0;
         }
 
         //地面から遠い時
         if (Ground == false)
         {
-            if (Mathf.Abs(punch) >= _skyMaxSpeed - 5)
+            if (Mathf.Abs(punch) >= skyMaxSpeed - 5)
             {
                 if (punch >= 0)
                 {
-                    punch = _skyMaxSpeed - 5;
+                    punch = skyMaxSpeed - 5;
                 }
                 if (punch <= 0)
                 {
-                    punch = -_skyMaxSpeed + 5;
+                    punch = -skyMaxSpeed + 5;
                 }
             }
 
             //動く速さ * パンチ移動スピード * 時間
-            transform.position += transform.right * (_speed + punch) * Time.fixedDeltaTime;
+            transform.position += transform.right * (speed + punch) * Time.fixedDeltaTime;
 
-            _speed += Input.GetAxisRaw("Horizontal") * skymove;
+            if (!PlayerManager.IsPlayerMoveRock) speed += Input.GetAxisRaw("Horizontal") * skymove;
+            else  speed = 0;
 
         }
 
@@ -179,55 +166,55 @@ public class Mover : MonoBehaviour
         {
             if (Input.GetAxis("Horizontal") == 0)
             {
-                if (_speed == 0)
+                if (speed == 0)
                 {
                     return;
                 }
-                if (_speed > 0)
+                if (speed > 0)
                 {
-                    _speed -= 0.5f;
+                    speed -= 0.5f;
                 }
-                if (_speed < 0)
+                if (speed < 0)
                 {
-                    _speed += 0.5f;
+                    speed += 0.5f;
                 }
-                if(Mathf.Abs(_speed) <= 0.5)
+                if(Mathf.Abs(speed) <= 0.5)
                 {
-                    _speed = 0;
+                    speed = 0;
                 }
             }
 
             //動く速さ * 時間
-            transform.position += transform.right * _speed * Time.fixedDeltaTime;
+            transform.position += transform.right * speed * Time.fixedDeltaTime;
         }
 
         //スピードに加速度を追加
-        _speed += acceleration * Input.GetAxisRaw("Horizontal");
+        if(!PlayerManager.IsPlayerMoveRock)speed += acceleration * Input.GetAxisRaw("Horizontal");
 
         //地面にいるときの最高速度を指定
-        if (Mathf.Abs(_speed) >= _maxSpeed && Ground)
+        if (Mathf.Abs(speed) >= maxSpeed && Ground)
         {
-            if (_speed > 0)
+            if (speed > 0)
             {
-                _speed = _maxSpeed;
+                speed = maxSpeed;
             }
             else
             {
-                _speed = -_maxSpeed;
+                speed = -maxSpeed;
             }
         }
 
 
         //地面から離れている時の最高速度を指定
-        else if (Mathf.Abs(_speed) >= _skyMaxSpeed && Ground == false)
+        else if (Mathf.Abs(speed) >= skyMaxSpeed && Ground == false)
         {
-            if (_speed > 0)
+            if (speed > 0)
             {
-                _speed = _skyMaxSpeed;
+                speed = skyMaxSpeed;
             }
             else
             {
-                _speed = -_skyMaxSpeed;
+                speed = -skyMaxSpeed;
             }
         }
     }
@@ -275,19 +262,6 @@ public class Mover : MonoBehaviour
                 this.transform.localScale.x * 0.6f,
                 groundMaskNumber);
     }
-
-    public void KnockBack(bool hoge)
-    {
-        if (hoge)
-        {
-            this.transform.DOMoveX(2f, 0.5f);
-        }
-        else
-        {
-            this.transform.DOMoveX(-2f, 0.5f);
-        }
-    }
-
 
 
     /// <summary>
@@ -340,6 +314,12 @@ public class Mover : MonoBehaviour
 
     public float GraphicSender()
     {
-        return _speed;
+        return speed;
+    }
+
+
+    public void Goal(Vector3 hoge)
+    {
+        this.transform.DOMove(new Vector3(hoge.x, hoge.y, hoge.z), 3.0f).SetEase(Ease.Linear);
     }
 }

@@ -123,6 +123,87 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &47398504
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3682663263567972684, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_Name
+      value: BigStone
+      objectReference: {fileID: 0}
+    - target: {fileID: 3682663263567972684, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4752407299906628855, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_Size.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4752407299906628855, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_Size.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4838076686826344026, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: fallSpeed
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4838076686826344026, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: moveSpeed
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4838076686826344026, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: mask.m_Bits
+      value: 264
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 10.15925
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.9735519
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7922631856593970526, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d2c140c36d8a27a42aaaeda492d151bf, type: 3}
 --- !u!1 &1055557597
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,7 +218,7 @@ GameObject:
   - component: {fileID: 1055557600}
   - component: {fileID: 1055557599}
   - component: {fileID: 1055557598}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PlayerManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -238,8 +319,8 @@ MonoBehaviour:
   dushSpeed: 3
   dushTime: 0.2
   isDush: 0
-  maxDush: 2
-  time: 2
+  maxDush: 99
+  time: 0
 --- !u!114 &1055557602
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -286,7 +367,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1244048055}
   - component: {fileID: 1244048056}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: punchVectol
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -526,7 +607,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1347719869}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PunchPos
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -562,7 +643,7 @@ GameObject:
   - component: {fileID: 1356625444}
   - component: {fileID: 1356625443}
   - component: {fileID: 1356625446}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -738,7 +819,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1807706847}
   - component: {fileID: 1807706846}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PlayerSkin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -822,7 +903,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1854202310}
   - component: {fileID: 1854202309}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Punch
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12384,6 +12465,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2760607044924323408, guid: 10f3545824ff23e4b92e20c79ef87b1b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5990769931350805745, guid: 10f3545824ff23e4b92e20c79ef87b1b, type: 3}
       propertyPath: tilePos
       value: 
@@ -12444,3 +12529,4 @@ SceneRoots:
   - {fileID: 1957759586}
   - {fileID: 1055557603}
   - {fileID: 7853859074487447145}
+  - {fileID: 47398504}

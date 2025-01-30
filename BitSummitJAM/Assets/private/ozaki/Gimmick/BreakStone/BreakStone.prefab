@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 9206299114119557405}
   - component: {fileID: 1103287545703085486}
   - component: {fileID: 883147120128589129}
-  m_Layer: 3
+  m_Layer: 9
   m_Name: BreakStone
   m_TagString: Gimmick
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a0973e54aa1b5142b13f9888d5cc27b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gimmick: 2
+  gimmick: 3
 --- !u!114 &9206299114119557405
 MonoBehaviour:
   m_ObjectHideFlags: 0

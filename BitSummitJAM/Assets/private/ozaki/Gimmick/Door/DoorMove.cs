@@ -4,6 +4,8 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 using DG.Tweening;
+using System.Runtime.CompilerServices;
+using UnityEngine.UI;
 
 public class DoorMove : MonoBehaviour
 {
@@ -17,38 +19,74 @@ public class DoorMove : MonoBehaviour
 
     private RaycastHit2D doorHit;
 
+    [SerializeField]
+    private LayerMask mask;
+
+    Vector2 Rotation;
+
+    bool open;
     // Start is called before the first frame update
     void Start()
     {
-        
+        open = false;
     }
 
     // Update is called once per frame
     void Update()
     {
+        Physics2D.Raycast(new Vector2(transform.position.x, transform.position.y + transform.localScale.y * 0.5f),
+                                             -transform.up * transform.localScale.y,
+                                             transform.localScale.y);
+        Debug.DrawRay(new Vector2(transform.position.x, transform.position.y + transform.localScale.y * 0.5f),
+                                             -transform.up * transform.localScale.y,
+                                             Color.red);
 
+        if (open)
+        {
+            DoorShock();
+        }
     }
 
     public void DoorRotation(int hoge,bool fuga)
     {
-        turnEnd = hoge * 30;
-
         Debug.Log(hoge);
 
-        if(fuga)
+        Debug.Log("ŠJ‚­");
+
+        open = true;
+
+        if (hoge < 3)
         {
-            rotatePos.transform.DOLocalRotate(new Vector3(0, 0, turnEnd), 1.0f).SetEase(Ease.OutBounce);
+            return;
+        }
+
+        turnEnd = hoge * 30;
+
+        
+        if (fuga)
+        {
+            rotatePos.transform.DOLocalRotate(new Vector3(0, 0, turnEnd), 3.0f).SetEase(Ease.OutBounce);
+
         }
         else
         {
-            rotatePos.transform.DOLocalRotate(new Vector3(0, 0, 360 - turnEnd), 1.0f);
-        }
+            rotatePos.transform.DOLocalRotate(new Vector3(0, 0, 360 - turnEnd), 3.0f).SetEase(Ease.OutBounce);
 
-        Invoke(nameof(returnRotate), 4.0f);
+        }
     }
 
-    private void returnRotate()
+    private void DoorShock()
     {
-        rotatePos.transform.DOLocalRotate(new Vector3(0, 0, 0), 4.0f);
+        RaycastHit2D hit = Physics2D.Raycast(new Vector2(transform.position.x, transform.position.y + transform.localScale.y * 0.5f),
+                                             -rotatePos.up * transform.localScale.y,
+                                             transform.localScale.y);
+
+        if (hit)
+        {
+            if (hit.collider.CompareTag("Enemy"))
+            {
+                hit.collider.gameObject.GetComponent<EnemyCoreC>().GetSonic();
+            }
+        }
     }
 }

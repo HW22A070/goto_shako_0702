@@ -1,25 +1,30 @@
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Build.Player;
+//using UnityEditor.Build.Player;
 using UnityEngine;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : SingletonMonoBehaviour<PlayerManager>
 {
     [SerializeField]
-    [Tooltip("ƒvƒŒƒCƒ„[Å‘åHp")]
+    [Tooltip("ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Å‘ï¿½Hp")]
     private int maxHp;
     /// <summary>
-    /// ƒvƒŒƒCƒ„[Å‘åHp
+    /// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½pï¿½ï¿½ï¿½`ï¿½æ“¾
+    /// </summary>
+    private PlayerPunch playerPunch;
+    /// <summary>
+    /// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Å‘ï¿½Hp
     /// </summary>
     public int MaxHp
     {
         get => maxHp;
     }
     [SerializeField]
-    [Tooltip("ƒvƒŒƒCƒ„[Hp")]
+    [Tooltip("ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[Hp")]
     private int hp;
     /// <summary>
-    /// ƒvƒŒƒCƒ„[Å‘åHp
+    /// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Å‘ï¿½Hp
     /// </summary>
     public int Hp
     {
@@ -28,20 +33,25 @@ public class PlayerManager : MonoBehaviour
     }
 
     [SerializeField]
-    [Tooltip("ƒvƒŒƒCƒ„[‚ª‰E‚ğŒü‚¢‚Ä‚¢‚é‚©")]
+    [Tooltip("ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚©")]
     private bool isRight;
 
+    /// <summary>
+    /// ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚©
+    /// </summary>
     private bool isRightNow;
 
+    /// <summary>
+    /// ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚©
+    /// </summary>
     public bool IsRight
     {
         get => isRight;
         set => isRight = value;
     }
 
-    private bool isRightnow;
-
     [SerializeField]
+    [Tooltip("ï¿½ï¿½ï¿½Gï¿½ï¿½ï¿½ï¿½")]
     private float _Time = 0;
 
     private float now = 0;
@@ -54,31 +64,64 @@ public class PlayerManager : MonoBehaviour
     [SerializeField]
     private GameObject punchPos;
 
+    [SerializeField]
+    LayerMask mask;
+
+    [SerializeField]
+    private PlayerCamera playerCamera;
+
+    /// <summary>
+    /// PlayerSoundï¿½æ“¾
+    /// </summary>
+    private PlayerSoundC _cPlayerSound;
+
     // Start is called before the first frame update
     void Start()
     {
+        PlayerManager.IsPlayerMoveRock = false;
+
+        //ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒæ­»ã‚“ã§ã„ãŸã‚‰ãã®å ´æ‰€ã«ç½®ã
+        if (SceneManagementC.PlayerDaed)
+        {
+            transform.position = SceneManagementC.PositionPlayerDead;
+        }
+
         isRight = true;
 
-        isRightnow = isRight;
-
         hp = maxHp;
+
+        playerPunch = GetComponent<PlayerPunch>();
+
+        playerCamera = playerCamera.GetComponent<PlayerCamera>();
+
+        //PlayerSoundCï¿½æ“¾
+        _cPlayerSound = GetComponent<PlayerSoundC>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetAxisRaw("Horizontal") > 0)
+        if (Input.GetKeyUp(KeyCode.Return))
+        {
+            PlayerDamage(0);
+        }
+
+        if (PlayerManager.IsPlayerMoveRock)
         {
             isRight = true;
         }
-        else if(Input.GetAxisRaw("Horizontal") < 0)
+        else if (Input.GetAxisRaw("Horizontal") > 0)
+        {
+            isRight = true;
+        }
+        else if (Input.GetAxisRaw("Horizontal") < 0)
         {
             isRight = false;
         }
 
-        if(isRight != isRightNow)
+        if (isRight != isRightNow)
         {
-            IsRightChange();
+            IsRightChange(isRight);
 
             isRightNow = isRight;
         }
@@ -92,15 +135,61 @@ public class PlayerManager : MonoBehaviour
                 Hit = false;
 
                 now = 0;
+
+
             }
         }
 
+    }
+
+    private void FixedUpdate()
+    {
+        //if (Physics2D.Raycast(transform.position,
+        //                     -transform.up,
+        //                     transform.localScale.y * 3.5f
+        //                     , mask))
+        //{
+        //    playerCamera.isGround();
+
+        //}
+        //else
+        //{
+        //    playerCamera.isJump();
+        //}
+        //Debug.DrawRay(transform.position, -transform.up * 3.5f, Color.red);
+
+        var jump = playerCamera.IsJump();
+
+        if (jump)
+        {
+
+            if (Physics2D.Raycast(transform.position,
+                                 -transform.up,
+                                 transform.localScale.y * 1.5f
+                                 , mask))
+            {
+                playerCamera.isGround();
+            }
+            Debug.DrawRay(transform.position, -transform.up * 1.5f, Color.red);
+        }
+        else
+        {
+            if (!Physics2D.Raycast(transform.position,
+                -transform.up,
+                transform.localScale.y * 3.5f
+                , mask))
+            {
+                playerCamera.isJump();
+            }
+            Debug.DrawRay(transform.position, -transform.up * 3.5f, Color.red);
+        }
     }
 
     public void PlayerDamage(int hoge)
     {
         if (Hit == false)
         {
+            _cPlayerSound.SoundStart(3);
             Hit = true;
 
             hp -= hoge;
@@ -108,23 +197,33 @@ public class PlayerManager : MonoBehaviour
 
         GetComponent<PlayerPunch>().PunchReset();
 
+        GetComponent<PlayerPunch>().PlayerOut();
+
         if (hp <= 0)
         {
-            Debug.Log("ƒQ[ƒ€ƒI[ƒo[");
+            SceneManagementC.PositionPlayerDead = transform.position;
             SceneManagementC.LoadScene("GameOverScene");
+        }
+
+        if (Hit)
+        {
+
         }
     }
 
-    public void IsRightChange()
+    public void IsRightChange(bool hoge)
     {
-        if (IsRight == true)
+        if (hoge)
         {
             playerBody.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
 
+            punchPos.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
         }
         else
         {
             playerBody.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
+
+            punchPos.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
         }
     }
 
@@ -137,4 +236,24 @@ public class PlayerManager : MonoBehaviour
     {
         return Hp;
     }
+
+    public void HpHeal()
+    {
+        if (MaxHp > hp)
+        {
+            hp = hp + 3;
+
+            if(MaxHp < hp)
+            {
+                hp = MaxHp;
+            }
+        }
+    }
+
+    public bool Right()
+    {
+        return isRight;
+    }
+
+    public static bool IsPlayerMoveRock;
 }
